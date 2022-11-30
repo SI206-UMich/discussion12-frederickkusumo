@@ -38,7 +38,14 @@ def add_employee(filename, cur, conn):
 
 # TASK 2: GET JOB AND HIRE_DATE INFORMATION
 def job_and_hire_date(cur, conn):
-    cur.execute("SELECT jobs.job_title FROM employees JOIN jobs ON employees.job_id = jobs.job_id")
+    cur.execute(
+        """
+        SELECT jobs.job_title 
+        FROM employees 
+        JOIN jobs 
+        ON employees.job_id = jobs.job_id
+        """
+    )
     rows = cur.fetchall()[0]
     return rows[0]
 
@@ -46,8 +53,15 @@ def job_and_hire_date(cur, conn):
 # Apply JOIN clause to match individual employees
 def problematic_salary(cur, conn):
     info = []
-    cur.execute("SELECT first_name, last_name FROM employees JOIN jobs ON employees.job_id = jobs.job_id \
-        WHERE employees.salary < jobs.min_salary OR employees.salary > jobs.max_salary")
+    cur.execute(
+        """
+        SELECT first_name, last_name 
+        FROM employees 
+        JOIN jobs 
+        ON employees.job_id = jobs.job_id 
+        WHERE employees.salary < jobs.min_salary OR employees.salary > jobs.max_salary
+        """
+    )
     rows = cur.fetchall()
     for r in rows:
         info.append(r)
@@ -55,7 +69,45 @@ def problematic_salary(cur, conn):
 
 # TASK 4: VISUALIZATION
 def visualization_salary_data(cur, conn):
-    pass
+    plt.figure()
+    cur.execute(
+        """
+        SELECT jobs.job_title, employees.salary
+        FROM employees
+        JOIN jobs 
+        ON jobs.job_id = employees.job_id
+        """
+    )
+    res = cur.fetchall()
+    conn.commit()
+    x, y = zip(*res)
+    plt.scatter(x, y)
+
+    cur.execute(
+        """
+        SELECT jobs.job_title, jobs.min_salary
+        FROM jobs
+        """
+    )
+    res = cur.fetchall()
+    conn.commit()
+    x, y = zip(*res)
+    plt.scatter(x, y, color = 'red', marker = 'x')
+
+    cur.execute(
+        """
+        SELECT jobs.job_title, jobs.max_salary
+        FROM jobs
+        """
+    )
+    res = cur.fetchall()
+    conn.commit()
+    x, y = zip(*res)
+    plt.scatter(x, y, color = 'red', marker = 'x')
+
+    plt.xticks(rotation = 45)
+    plt.tight_layout()
+    plt.show()
 
 class TestDiscussion12(unittest.TestCase):
     def setUp(self) -> None:
@@ -91,6 +143,8 @@ def main():
     wrong_salary = (problematic_salary(cur, conn))
     print(wrong_salary)
 
+    visualization_salary_data(cur, conn)
+    
 if __name__ == "__main__":
     main()
     unittest.main(verbosity=2)
